@@ -1,0 +1,17 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: play-mario
+spec:
+  tasks:
+    - name: start
+      taskRef:
+        name: start-game
+      params:
+        - name: players
+          value: "1"
+    - name: win
+      taskRef:
+        name: defeat-bowser
+      runAfter: 
+        - start

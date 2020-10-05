@@ -1,0 +1,11 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: defeat-bowser
+spec:
+  steps:
+    - name: defeat-bowser
+      image: alpine:3.12
+      command: 
+        - /bin/sh
+      args: ["-c", "echo Battling Bowser && sleep 1 && echo You won"]

@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: start-game
+spec:
+  params: 
+    - name: players
+      description: Number of players
+      default: "1"
+      type: string
+  steps:
+    - name: select-players
+      image: alpine:3.12
+      command: 
+        - /bin/sh
+      args: ["-c", "echo Selecting $(params.players) Players"]
+    - name: press-start
+      image: alpine:3.12
+      command:
+        - /bin/sh
+      args: ["-c", "echo Starting game"]
