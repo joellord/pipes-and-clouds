@@ -1,0 +1,21 @@
+{
+  "name": "pipes-and-clouds",
+  "version": "1.0.0",
+  "description": "* Start Minikube * Install Tekton   * kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml * Install Tkn   * CLI vs Kubectl",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joellord/pipes-and-clouds.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/joellord/pipes-and-clouds/issues"
+  },
+  "homepage": "https://github.com/joellord/pipes-and-clouds#readme",
+  "dependencies": {}
+}

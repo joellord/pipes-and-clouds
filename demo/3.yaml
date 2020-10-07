@@ -13,7 +13,9 @@ spec:
       image: alpine:3.12
       command: 
         - /bin/sh
-      args: ["-c", "echo Selecting $(params.players) Players"]
+      args: 
+        - "-c"
+        - "echo Selecting $(params.players) Players"
     - name: press-start
       image: alpine:3.12
       command:
