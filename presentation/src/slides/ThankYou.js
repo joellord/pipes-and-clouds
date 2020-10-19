@@ -7,7 +7,7 @@ export default class ThankYou extends Component {
     super(props);
 
     let url = this.props.moreInfoUrl || "ezurl.to/LINK";
-    url = url.replace(/http[s]*\:\/\//, "");
+    url = url.replace(/http[s]*:\/\//, "");
 
     this.state = {
       title: this.props.title || "TALK TITLE",

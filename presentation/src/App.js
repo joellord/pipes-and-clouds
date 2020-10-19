@@ -58,7 +58,7 @@ function App() {
         <Title>CI/CD</Title>
         <Text>CI/CD introduces ongoing automation and continuous monitoring throughout the lifecycle of apps, from integration and testing phases to delivery and deployment.</Text>
         <Text> </Text>
-        <Text><a href="#">https://www.redhat.com/en/topics/devops/what-is-ci-cd</a></Text>
+        <Text><a href="https://www.redhat.com/en/topics/devops/what-is-ci-cd">https://www.redhat.com/en/topics/devops/what-is-ci-cd</a></Text>
       </Slide>
 
       <Slide notes="The acronym CI/CD has a few different meanings. The “CI” in always refers to continuous integration, which is an automation process for developers. Successful CI means new code changes to an app are regularly built, tested, and merged to a shared repository. It’s a solution to the problem of having too many branches of an app in development at once that might conflict with each other.
@@ -213,7 +213,7 @@ spec:
 
       <Slide>
         <Image src={ImgPipeline} />
-        <Text><a href="#">http://tekton.dev/docs/concepts</a></Text>
+        <Text><a href="http://tekton.dev/docs/concepts">http://tekton.dev/docs/concepts</a></Text>
       </Slide>
       
       <CodeSlide title="Pipelines" lang="yaml">
@@ -406,7 +406,7 @@ spec:
 
       <Slide>
         <Image src={ImgPipelineResources} />
-        <Text><a href="#">http://tekton.dev/docs/concepts</a></Text>
+        <Text><a href="http://tekton.dev/docs/concepts">http://tekton.dev/docs/concepts</a></Text>
       </Slide>
 
       <ImageWithTitle title="Workspaces" img={ ImgWorkspace } />
