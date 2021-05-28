@@ -12,21 +12,14 @@ spec:
       description: Operation to be performed by npm
       default: "start"
       type: string
-  resources:
-    inputs:
-      - name: repo
-        type: git
+  workspaces:
+    - name: output
   steps:
-    - name: npm-install
+    - name: npm-action
       image: node:14
       command:
         - /bin/bash
-      args: ['-c', 'cd repo/$(params.pathContext) && npm install']
-    - name: npm-lint
-      image: node:14
-      command:
-        - /bin/bash
-      args: ['-c', 'cd repo/$(params.pathContext) && npm $(params.action)']
+      args: ['-c', 'cd $(workspaces.output.path) && npm $(params.action)']
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -43,18 +36,22 @@ spec:
     - name: registry
       type: string
       default: "docker.io"
-  resources:
-    inputs:
-      - name: repo
-        type: git
+  workspaces:
+    - name: output
   steps:
     - name: generate
       image: quay.io/openshift-pipeline/s2i
-      workingDir: /workspace/repo/app
+      workingDir: $(workspaces.output.path)
       command: ["s2i", "build", ".", "registry.access.redhat.com/ubi8/nodejs-12", "--as-dockerfile", "/gensource/Dockerfile.gen"]
       volumeMounts:
         - name: gensource
           mountPath: /gensource
+    - name: rm-node-modules
+      image: "registry.access.redhat.com/ubi8/ubi-minimal"
+      command:
+        - /bin/bash
+        - '-c'
+        - cd $(workspaces.output.path) && rm -rf ./node_modules
     - name: build
       image: quay.io/buildah/stable
       workingDir: /gensource
@@ -86,6 +83,10 @@ metadata:
   name: app-deploy
 spec:
   params:
+    - name: repo
+      type: string
+      default: https://github.com/joellord/tekton-lab-app
+      description: Name of the repository to use
     - name: user
       type: string
       description: User name for registry
@@ -95,34 +96,53 @@ spec:
     - name: image-name
       type: string
       description: Name of the image to produce (will be user/image-name)
-  resources:
-    - name: git-repo
-      type: git
+  workspaces:
+    - name: code
   tasks:
+    - name: clone-code
+      taskRef: 
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: code
+      params:
+        - name: url
+          value: $(params.repo)
+        - name: revision
+          value: main
+    - name: install
+      taskRef:
+        name: npm
+      params:
+        - name: action
+          value: install
+      workspaces:
+        - name: output
+          workspace: code
+      runAfter:
+        - clone-code
     - name: lint
       taskRef:
         name: npm
       params:
-        - name: pathContext
-          value: app
         - name: action
           value: run lint
-      resources:
-        inputs:
-          - name: repo
-            resource: git-repo
+      workspaces:
+        - name: output
+          workspace: code
+      runAfter:
+        - install
     - name: test
       taskRef:
         name: npm
       params:
-        - name: pathContext
-          value: app
         - name: action
           value: run test
-      resources:
-        inputs:
-          - name: repo
-            resource: git-repo
+      workspaces:
+        - name: output
+          workspace: code
+      runAfter:
+        - install
     - name: build-and-deploy
       params:
         - name: user
@@ -133,10 +153,9 @@ spec:
           value: $(params.image-name)
       taskRef:
         name: s2i-nodejs
-      resources:
-        inputs:
-          - name: repo
-            resource: git-repo
+      workspaces:
+        - name: output
+          workspace: code
       runAfter:
         - lint
         - test

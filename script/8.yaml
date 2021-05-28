@@ -1,0 +1,79 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: start-game
+spec:
+  workspaces:
+    - name: level
+  params: 
+    - name: players
+      description: Number of players
+      default: "1"
+      type: string
+  steps:
+    - name: select-players
+      image: alpine:3.12
+      command: 
+        - /bin/sh
+      args: ["-c", "echo Selecting $(params.players) Players"]
+    - name: press-start
+      image: alpine:3.12
+      command:
+        - /bin/sh
+      args: ["-c", "echo Starting game"]
+    - name: show-level
+      image: alpine:3.12
+      command: 
+        - /bin/sh
+      args: ["-c", echo Starting level $(cat $(workspaces.level.path)/level/level.txt)]
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: level-selector
+spec:
+  workspaces:
+    - name: level-ws
+  tasks:
+    - name: fetch-level
+      taskRef: 
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: level-ws
+      params:
+        - name: url
+          value: https://github.com/joellord/pipes-and-clouds
+        - name: revision
+          value: main
+    - name: play
+      taskRef: 
+        name: start-game
+      workspaces:
+        - name: level
+          workspace: level-ws
+      runAfter: 
+        - fetch-level
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: tkn-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tkn-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

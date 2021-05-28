@@ -27,14 +27,15 @@ import ImgPipelineResources from "./assets/pipeline-resources.png";
 import ImgPipeline from "./assets/pipeline.png";
 import ImgDeprecated from "./assets/deprecated.gif";
 import ImgInfinite from "./assets/infinite-lives.gif";
+import ImgDash from "./assets/dash.png";
 
 const SHOW_NOTES = true;
 
 const talkProps = {
   title: "Power-Up With Clouds And Pipelines",
-  conference: "Open Source Automation Days",
-  conferenceHashTag: "#osad20",
-  date: "Oct 21, 2020",
+  conference: "TheCloudFirst.io",
+  conferenceHashTag: "#TCF21",
+  date: "March 11, 2021",
   moreInfoUrl: "http://ezurl.to/pipes-and-clouds"
 }
 
@@ -44,7 +45,7 @@ function App() {
   return (
     <Deck swipeToChange={false} footer={footer} presenterNotes={SHOW_NOTES}>
       <ImageWithTitle 
-        title="Power-Up With Clouds And Pipelines" 
+        title="Power-Up With Clouds And (Tekton) Pipelines" 
         img={ ImgMarioStar } 
         notes="You might have heard about CI/CD by now. This concepts helps you release and deploy faster and more reliably. More and more organizations have now adopted CI/CD as part of their core business processes. Today, I will show you how you can integrate your CI/CD pipeline directly inside your Kubernetes cluster. This can be done with Tekton, a Cloud-Native CI/CD framework. Tekton uses Tasks and Pipelines that you can use in your enterprise cloud. Now, I couldn't help but to make an association here. Clouds. Pipes.... Super Mario. So, I had to theme this application on Super Mario Brothers."
       />
@@ -111,9 +112,17 @@ function App() {
         <Title>Getting Started</Title>
         <List>
           <li>Kubernetes Cluster (minikube)</li>
-          <li>Install CRDs</li>
+          <li>Install Tekton CRDs</li>
           <li>`tkn` CLI tool</li>
         </List>
+      </Slide>
+
+      <Slide>
+        <Title>Getting Started</Title>
+        <Subtitle>Minikube</Subtitle>
+        <Text><a href="https://minikube.sigs.k8s.io/docs/start/">https://minikube.sigs.k8s.io/docs/start/</a></Text>
+        <Subtitle>Tekton CRDs and CLI</Subtitle>
+        <Text><a href="https://tekton.dev/docs/getting-started/">https://tekton.dev/docs/getting-started/</a></Text>
       </Slide>
 
       <ImageWithTitle img={ ImgPushStart } title="Tasks" />
@@ -492,6 +501,15 @@ spec:
         date={talkProps.date}
         moreInfoUrl={talkProps.moreInfoUrl}
       />
+
+      <Slide>
+        <ImageWithTitle title="Tekton Dashboard" img={ImgDash} />
+      </Slide>
+
+      <Slide>
+        <a href="http://localhost:9097" target="_blank" rel="noopener noreferrer">Dashboard</a>
+      </Slide>
+
     </Deck>
   );
 }

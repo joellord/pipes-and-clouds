@@ -1,0 +1,48 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: collect
+spec:
+  params: 
+    - name: object
+      description: What should we collect?
+      default: coins
+      type: string
+  steps:
+    - name: collect
+      image: alpine:3.12
+      command: 
+        - /bin/sh
+      args: ["-c", "R=$(shuf -i 1-5 -n 1); sleep $R && echo collecting $R $(params.object) along the way"]
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: play-mario
+spec:
+  tasks:
+    - name: start
+      taskRef:
+        name: start-game
+      params:
+        - name: players
+          value: "1"
+    - name: collect-coins
+      taskRef: 
+        name: collect
+      runAfter: 
+        - start
+    - name: collect-mushrooms
+      taskRef:
+        name: collect
+      params:
+        - name: object
+          value: mushrooms
+      runAfter: 
+        - start
+    - name: win
+      taskRef:
+        name: defeat-bowser
+      runAfter: 
+        - collect-mushrooms
+        - collect-coins

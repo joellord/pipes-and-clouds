@@ -1,0 +1,161 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: npm
+spec:
+  params:
+    - name: pathContext
+      description: Path to application inside git
+      default: "."
+      type: string
+    - name: action
+      description: Operation to be performed by npm
+      default: "start"
+      type: string
+  workspaces:
+    - name: output
+  steps:
+    - name: npm-action
+      image: node:14
+      command:
+        - /bin/bash
+      args: ['-c', 'cd $(workspaces.output.path) && npm $(params.action)']
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: s2i-nodejs
+spec:
+  params: 
+    - name: user
+      type: string
+    - name: pass
+      type: string
+    - name: image-name
+      type: string
+    - name: registry
+      type: string
+      default: "docker.io"
+  workspaces:
+    - name: output
+  steps:
+    - name: generate
+      image: quay.io/openshift-pipeline/s2i
+      workingDir: $(workspaces.output.path)
+      command: ["s2i", "build", ".", "registry.access.redhat.com/ubi8/nodejs-12", "--as-dockerfile", "/gensource/Dockerfile.gen"]
+      volumeMounts:
+        - name: gensource
+          mountPath: /gensource
+    - name: rm-node-modules
+      image: "registry.access.redhat.com/ubi8/ubi-minimal"
+      command:
+        - /bin/bash
+        - '-c'
+        - cd $(workspaces.output.path) && rm -rf ./node_modules
+    - name: build
+      image: quay.io/buildah/stable
+      workingDir: /gensource
+      command: ["buildah", "bud", "--tls-verify=false", "--layers", "-f", "/gensource/Dockerfile.gen", "-t", "$(params.registry)/$(params.user)/$(params.image-name)", "."]
+      volumeMounts:
+        - name: varlibcontainers
+          mountPath: /var/lib/containers
+        - name: gensource
+          mountPath: /gensource
+      securityContext: 
+        privileged: true
+    - name: push
+      image: quay.io/buildah/stable
+      command: ['buildah', 'push', '--creds=$(params.user):$(params.pass)', '--tls-verify=false', '$(params.registry)/$(params.user)/$(params.image-name)', 'docker://$(params.registry)/$(params.user)/$(params.image-name)']
+      volumeMounts:
+        - name: varlibcontainers
+          mountPath: /var/lib/containers
+      securityContext:
+        privileged: true
+  volumes:
+    - name: varlibcontainers
+      emptyDir: {}
+    - name: gensource
+      emptyDir: {}
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: app-deploy
+spec:
+  params:
+    - name: repo
+      type: string
+      default: https://github.com/joellord/tekton-lab-app
+      description: Name of the repository to use
+    - name: user
+      type: string
+      description: User name for registry
+    - name: pass
+      type: string
+      description: Registry password
+    - name: image-name
+      type: string
+      description: Name of the image to produce (will be user/image-name)
+  workspaces:
+    - name: code
+  tasks:
+    - name: clone-code
+      taskRef: 
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: code
+      params:
+        - name: url
+          value: $(params.repo)
+        - name: revision
+          value: main
+    - name: install
+      taskRef:
+        name: npm
+      params:
+        - name: action
+          value: install
+      workspaces:
+        - name: output
+          workspace: code
+      runAfter:
+        - clone-code
+    - name: lint
+      taskRef:
+        name: npm
+      params:
+        - name: action
+          value: run lint
+      workspaces:
+        - name: output
+          workspace: code
+      runAfter:
+        - install
+    - name: test
+      taskRef:
+        name: npm
+      params:
+        - name: action
+          value: run test
+      workspaces:
+        - name: output
+          workspace: code
+      runAfter:
+        - install
+    - name: build-and-deploy
+      params:
+        - name: user
+          value: $(params.user)
+        - name: pass
+          value: $(params.pass)
+        - name: image-name
+          value: $(params.image-name)
+      taskRef:
+        name: s2i-nodejs
+      workspaces:
+        - name: output
+          workspace: code
+      runAfter:
+        - lint
+        - test
